@@ -9,11 +9,15 @@ def index(req, resp):
     resp.end()
 
 
-
 server = MinHTTPServer.MinHTTPServer()
 server.listen(8090)
-server.route('/', index)
+server.staticRes('html')
+server.route('/index.html', index)
 
 
+GET
+AsyncRequest.Request('http://www.baidu.com',lambda x:print(x.read()))
+POST
+AsyncRequest.Post('http://www.baidu.com',{'key':11},lambda x:print(x.read()))
 
 ```

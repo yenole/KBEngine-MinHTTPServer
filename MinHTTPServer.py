@@ -2,6 +2,7 @@
 import KBEngine
 import Functor
 import socket
+import urllib.parse
 from io import StringIO
 from KBEDebug import *
 
@@ -109,11 +110,18 @@ class HTTPRequest:
             self.headers[words[0]] = ':'.join(words[1:])
         return (None, None)
 
+    def param(self, key, value=None):
+        return self.params.get(key, value)
+
+    def parseParam(self, key, value=None):
+        return urllib.parse.unquote(self.params.get(key, value)) if key in self.params.keys() else value
+
 
 class MinHTTPServer:
 
     def __init__(self):
         self._sock = None
+        self._resPath = None
         self._handler = {}
 
     def listen(self, port, addr='0.0.0.0'):
@@ -124,6 +132,9 @@ class MinHTTPServer:
             KBEngine.registerReadFileDescriptor(self._sock.fileno(), self.onAccept)
             return True
         return False
+
+    def staticRes(self, resPath=None):
+        self._resPath = resPath
 
     def route(self, url, func):
         if url and func:
@@ -145,8 +156,23 @@ class MinHTTPServer:
                     for func in v:
                         try:
                             func(req, resp)
+                        except:
+                            pass
                         finally:
                             if resp.complete():
                                 return
+            if self._resPath:
+                self.onRespStaticRes(req, resp)
+
         except:
             sock.close()
+
+    def onRespStaticRes(self, req, resp):
+        filePath = '%s%s' % (self._resPath, req.url if req.url[-1] != '/' else ('%sindex.html' % req.url))
+        if KBEngine.hasRes(filePath):
+            file = KBEngine.open(filePath, 'rb')
+            resp.body = file.read()
+            file.close()
+        else:
+            resp.body = b'File Not Found...'
+        resp.end()
