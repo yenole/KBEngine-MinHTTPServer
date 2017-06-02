@@ -15,9 +15,9 @@ server.staticRes('html')
 server.route('/index.html', index)
 
 
-// GET
+# GET
 AsyncRequest.Request('http://www.baidu.com',lambda x:print(x.read()))
-// POST
+# POST
 AsyncRequest.Post('http://www.baidu.com',{'key':11},lambda x:print(x.read()))
 
 ```
